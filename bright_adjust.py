@@ -23,13 +23,15 @@ def global_cdf(intensities):
         cdf[i] = total
     return cdf
 
-def anhe(img, N_max = 100):
+def anhe(img, N_max = 100, K = 3, T = 20):
     """
     Runs adaptive neighborhood histogram equalization on the input image
 
     Args:
         img: 299x299x3 np array image in RGB format of image to run adjustment on
         N_max: max number of pixels in the adjustable neighborhood
+        K: multiplicitive constant for standard deviation of neighborhood
+        T: maximum pixel intensity difference from current pixel for neighborhood
 
     Returns:
         new_img: 299x299x3 np array image in RGB format of contrast adjusted image
@@ -37,16 +39,56 @@ def anhe(img, N_max = 100):
     # convert 3 channels into one intensity channel
     intensities = np.round(0.299 * img[:,:,0] + 0.587 * img[:,:,1] + 0.114 * img[:,:,2]).astype(int) 
     out_intens = np.zeros(intensities.shape)
+    out_img = np.zeros_like(img)
     g_cdf = global_cdf(intensities)
     global_hist = 255 * g_cdf
     # loop through every pixel and get the new pixel intensity
+    dirs = [(1,1), (1,0), (1,-1), (0,1), (0,-1), (-1,1), (-1,0), (-1,-1)]
     for i in range(len(intensities)):
         for j in range(len(intensities[0])):
             cur_int = intensities[i,j]
             queue = [(i,j)]
             seen = {}
-            count = 0
+            count = 1
+            neighborhood = [cur_int]
+            hist = np.zeros(256)
             # find the adjustable neighborhood
+            while queue and count < N_max:
+                cur = queue.pop(0)
+                if cur in seen:
+                    continue
+                for dir in dirs:
+                    next = (cur[0] + dir[0], cur[1] + dir[1])
+                    if next in seen or next[0] < 0 or next[0] >= len(intensities) or next[1] < 0 or next[1] >= len(intensities):
+                        continue
+                    next_int = intensities[next[0],next[1]]
+                    if abs(next_int - cur_int) <= T:
+                        queue.append(next)
+                        neighborhood.append(next_int)
+                        hist[next_int] += 1
+                        count += 1
+            # neighborhood is found
+            hist /= count
+            n_cdf = np.zeros(256)
+            total = 0
+            for k in range(len(hist)):
+                total += hist[k]
+                n_cdf[k] = total
+            
+            mean = round(np.mean(neighborhood))
+            std = np.std(neighborhood)
+            imin = max(round(global_hist[mean] - K * std), 0)
+            imax = min(round(global_hist[mean] + K * std), 255)
+            out_intens[i,j] = round(imin + (imax - imin) * n_cdf[cur_int])
+            if cur_int == 0:
+                ratio = 0
+            else:
+                ratio = out_intens[i,j] / cur_int
+            
+            out_img[i,j] = ratio * img[i,j]
+            
+    return out_img
+
 
 # TODO: remove for testing
 # anhe(np.zeros((299,299,3)))
