@@ -89,6 +89,20 @@ def anhe(img, N_max = 100, K = 3, T = 20):
             
     return out_img
 
+def contrast_adjust(img, delta = 25, lam = 1.4):
+    intensities = np.round(0.2126 * img[:,:,0] + 0.7152 * img[:,:,1] + 0.0722 * img[:,:,2])/255
+    mean = np.mean(intensities)
+    gamma = np.sum(((intensities-mean))**2) / (299*299 - 1) * 4
+    y = 1 + lam*gamma
+    new_int = y * (intensities - gamma)
+    ratio = new_int / intensities
+    print(np.max(ratio), np.min(ratio))
+    
+    new_img = np.clip(img * ratio[:, :, np.newaxis], 0, 255).astype(np.uint8)
+    print(np.max(img * ratio[:, :, np.newaxis]))
+    return new_img
+    
+
 
 # TODO: remove for testing
 # anhe(np.zeros((299,299,3)))

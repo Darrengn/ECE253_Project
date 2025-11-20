@@ -6,7 +6,9 @@ from bright_adjust import *
 img = cv2.imread('test_img.jpg')
 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 img = cv2.resize(img, (299, 299))
-output = anhe(img)
+# output = anhe(img)
+out = contrast_adjust(img)
 
-plt.imshow(img)
+plt.imshow(out)
 plt.show()
+
