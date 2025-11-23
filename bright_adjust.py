@@ -23,7 +23,7 @@ def global_cdf(intensities):
         cdf[i] = total
     return cdf
 
-def anhe(img, N_max = 100, K = 3, T = 20):
+def anhe(img, N_max = 100, K = 3, T = 5):
     """
     Runs adaptive neighborhood histogram equalization on the input image
 
@@ -84,18 +84,18 @@ def anhe(img, N_max = 100, K = 3, T = 20):
                 ratio = 0
             else:
                 ratio = out_intens[i,j] / cur_int
-            
-            out_img[i,j] = ratio * img[i,j]
+            out_img[i,j] = np.clip(ratio * img[i,j], 0, 255)
             
     return out_img
 
-def contrast_adjust(img, delta = 25, lam = 1.4):
+def contrast_adjust(img, delta = 50, lam = 1.4):
     intensities = np.round(0.2126 * img[:,:,0] + 0.7152 * img[:,:,1] + 0.0722 * img[:,:,2])/255
     mean = np.mean(intensities)
-    gamma = np.sum(((intensities-mean))**2) / (299*299 - 1) * 4
+    gamma = np.sum(((intensities-mean))**2) / (299*299 - 1) * delta
+    print(gamma)
     y = 1 + lam*gamma
-    new_int = y * (intensities - gamma)
-    ratio = new_int / intensities
+    new_int = y * (intensities + gamma)
+    ratio = np.where(intensities != 0.0, new_int / intensities, 0)
     print(np.max(ratio), np.min(ratio))
     
     new_img = np.clip(img * ratio[:, :, np.newaxis], 0, 255).astype(np.uint8)

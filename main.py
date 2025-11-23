@@ -1,14 +1,22 @@
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
+from PIL import Image
+from pillow_heif import register_heif_opener
 from bright_adjust import *
 
-img = cv2.imread('test_img.jpg')
-img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-img = cv2.resize(img, (299, 299))
-# output = anhe(img)
-out = contrast_adjust(img)
 
-plt.imshow(out)
+register_heif_opener()
+img = Image.open("data/contrast/con1.HEIC")
+img = np.array(img.convert('RGB'))
+img = cv2.resize(img, (299, 299))
+
+out = anhe(img)
+out2 = contrast_adjust(img)
+
+fig, axes = plt.subplots(2, 2)
+axes[0,0].imshow(img)
+axes[0,1].imshow(out)
+axes[1,0].imshow(out2)
 plt.show()
 
