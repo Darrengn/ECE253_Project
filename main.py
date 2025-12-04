@@ -28,6 +28,10 @@ def predict_image(image_array):
     
     return predicted_class, probabilities.numpy()
 
+class_names = [
+    "football", "baseball", "basketball", "billiard ball", "bowling ball", "cricket ball", "soccer ball", "golf ball", "field hockey ball", "hockey puck", "rugby ball", "shuttlecock", "table tennis ball", "tennis ball","volleyball"
+]
+
 transform = transforms.Compose([
     transforms.Resize(299),             # resize shortest side to 299 pixels
     transforms.CenterCrop(299),         # crop to 299x299 at center
@@ -58,16 +62,5 @@ register_heif_opener()
 img = Image.open("data/contrast/con1.HEIC")
 img = np.array(img.convert('RGB'))
 img = cv2.resize(img, (299, 299))
-
-# out = anhe(img)
-out2 = contrast_adjust(img)
-
-fig, axes = plt.subplots(2, 2)
-axes[0,0].imshow(img)
-# axes[0,1].imshow(out)
-axes[1,0].imshow(out2)
-print(predict_image(img), predict_image(out2))
-
-plt.show()
 
 

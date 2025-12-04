@@ -1,5 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import cv2
+from PIL import Image
+from pillow_heif import register_heif_opener
+import torch
+import torch.nn as nn
+import torchvision.models as models
+from torchvision.models import Inception_V3_Weights
+from torchvision import transforms
+
 def global_cdf(intensities):
     """
     creates a global cdf from a one channel intensity image
@@ -37,7 +46,8 @@ def anhe(img, N_max = 100, K = 3, T = 20):
         new_img: 299x299x3 np array image in RGB format of contrast adjusted image
     """
     # convert 3 channels into one intensity channel
-    intensities = np.round(0.299 * img[:,:,0] + 0.587 * img[:,:,1] + 0.114 * img[:,:,2]).astype(int) 
+    # intensities = np.round(0.299 * img[:,:,0] + 0.587 * img[:,:,1] + 0.114 * img[:,:,2]).astype(int) 
+    intensities = np.round(0.2126 * img[:,:,0] + 0.7152 * img[:,:,1] + 0.0722 * img[:,:,2]).astype(int)
     out_intens = np.zeros(intensities.shape)
     out_img = np.zeros_like(img)
     g_cdf = global_cdf(intensities)
@@ -99,8 +109,81 @@ def contrast_adjust(img, delta = 50, lam = 1.4):
     new_img = np.clip(img * ratio[:, :, np.newaxis], 0, 255).astype(np.uint8)
     return new_img
     
+def predict_image(image_array):
+    
+    # Convert numpy array to PIL Image
+    pil_image = Image.fromarray(image_array.astype('uint8'))
+    
+    # Apply transforms
+    input_tensor = transform(pil_image)
+    input_batch = input_tensor.unsqueeze(0)  # Add batch dimension
+    
+    # Make prediction
+    with torch.no_grad():
+        output = model(input_batch)
+        probabilities = torch.nn.functional.softmax(output[0], dim=0)  # Use output[0] for inception v3
+        predicted_class = torch.argmax(probabilities).item()
+    
+    return predicted_class, probabilities.numpy()
 
 
-# TODO: remove for testing
-# anhe(np.zeros((299,299,3)))
-# global_hist(np.ones((299,299), dtype=np.int8))
+if __name__ == "__main__":
+    class_names = [
+        "football", "baseball", "basketball", "billiard ball", "bowling ball", "cricket ball", "soccer ball", "golf ball", "field hockey ball", "hockey puck", "rugby ball", "shuttlecock", "table tennis ball", "tennis ball","volleyball"
+    ]
+
+    transform = transforms.Compose([
+        transforms.Resize(299),             # resize shortest side to 299 pixels
+        transforms.CenterCrop(299),         # crop to 299x299 at center
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406],
+                            [0.229, 0.224, 0.225])
+    ])
+
+    model = models.inception_v3(weights=Inception_V3_Weights.DEFAULT)
+    in_features = model.fc.in_features
+    model.fc = nn.Linear(in_features, 15)
+    checkpoint = torch.load('sports_balls_inception_v3.pth', map_location='cpu')
+
+    model.eval()
+
+    if isinstance(checkpoint, dict):
+        if 'state_dict' in checkpoint:
+            model.load_state_dict(checkpoint['state_dict'])
+        elif 'model_state_dict' in checkpoint:
+            model.load_state_dict(checkpoint['model_state_dict'])
+        else:
+            model.load_state_dict(checkpoint)
+    else:
+        model.load_state_dict(checkpoint)
+
+    register_heif_opener()
+
+    cur = [3]
+    deltas = []
+    with open('data/contrast/deltas.txt', 'r') as file:
+        for line in file:
+            line = line.strip()  # Remove whitespace and newline
+            if line:  # Skip empty lines
+                deltas.append(int(line))
+
+    labels = []
+    with open('data/contrast/labels.txt', 'r') as file:
+        for line in file:
+            line = line.strip()  # Remove whitespace and newline
+            if line:  # Skip empty lines
+                labels.append(int(line))
+
+    # for i in cur:
+    #     img = Image.open("data/contrast/con"+str(i)+".HEIC")
+    #     img = np.array(img.convert('RGB'))
+    #     img = cv2.resize(img, (299, 299))
+    #     # out = anhe(img)
+    #     out2 = contrast_adjust(img, delta=deltas[i-1])
+    #     # cv2.imwrite("output/contrast/anhe"+str(i)+".png",cv2.cvtColor(out, cv2.COLOR_RGB2BGR))
+    #     cv2.imwrite("output/contrast/cs"+str(i)+".png",cv2.cvtColor(out2, cv2.COLOR_RGB2BGR))
+    #     # print(class_names[predict_image(out)[0]])
+    #     print(class_names[predict_image(out2)[0]])
+
+    for i in labels:
+        print(class_names[i])
