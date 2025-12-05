@@ -102,7 +102,7 @@ def contrast_adjust(img, delta = 50, lam = 1.4):
     intensities = np.round(0.2126 * img[:,:,0] + 0.7152 * img[:,:,1] + 0.0722 * img[:,:,2])/255
     mean = np.mean(intensities)
     gamma = np.sum(((intensities-mean))**2) / (299*299 - 1) * delta
-    y = 1 + lam*gamma
+    y = 1 + lam*abs(gamma)
     new_int = y * (intensities + gamma)
     ratio = np.where(intensities != 0.0, new_int / intensities, 0)
     
@@ -159,7 +159,7 @@ if __name__ == "__main__":
 
     register_heif_opener()
 
-    cur = [3]
+    
     deltas = []
     with open('data/contrast/deltas.txt', 'r') as file:
         for line in file:
@@ -174,6 +174,7 @@ if __name__ == "__main__":
             if line:  # Skip empty lines
                 labels.append(int(line))
 
+    # cur = range(61,65)
     # for i in cur:
     #     img = Image.open("data/contrast/con"+str(i)+".HEIC")
     #     img = np.array(img.convert('RGB'))
@@ -185,5 +186,32 @@ if __name__ == "__main__":
     #     # print(class_names[predict_image(out)[0]])
     #     print(class_names[predict_image(out2)[0]])
 
-    for i in labels:
-        print(class_names[i])
+    raw_correct = 0
+    anhe_correct = 0
+    cs_correct = 0
+    for i in range(len(labels)):
+        # print(class_names[labels[i]])
+        img = cv2.imread("output/contrast/cs"+str(i+1)+".png")
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        img = cv2.resize(img, (299, 299))
+        if labels[i] == predict_image(img)[0]:
+            cs_correct += 1
+            # print(i+1)
+
+        raw = Image.open("data/contrast/con"+str(i+1)+".HEIC")
+        raw = np.array(raw.convert('RGB'))
+        raw = cv2.resize(raw, (299, 299))
+        if labels[i] == predict_image(raw)[0]:
+            raw_correct += 1
+            if predict_image(img)[0] != labels[i]:
+                print(i+1)
+
+        img = cv2.imread("output/contrast/anhe"+str(i+1)+".png")
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        img = cv2.resize(img, (299, 299))
+        if labels[i] == predict_image(img)[0]:
+            anhe_correct += 1
+
+        
+        
+    print(raw_correct, anhe_correct, cs_correct)

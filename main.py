@@ -62,5 +62,3 @@ register_heif_opener()
 img = Image.open("data/contrast/con1.HEIC")
 img = np.array(img.convert('RGB'))
 img = cv2.resize(img, (299, 299))
-
-
