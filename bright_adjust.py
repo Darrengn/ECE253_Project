@@ -174,37 +174,53 @@ if __name__ == "__main__":
             if line:  # Skip empty lines
                 labels.append(int(line))
 
-    # cur = range(61,65)
+    # cur = range(1,96)
     # for i in cur:
+    #     print(i)
     #     img = Image.open("data/contrast/con"+str(i)+".HEIC")
     #     img = np.array(img.convert('RGB'))
     #     img = cv2.resize(img, (299, 299))
-    #     # out = anhe(img)
+    #     out = anhe(img)
+    #     out = cv2.medianBlur(out,5)
     #     out2 = contrast_adjust(img, delta=deltas[i-1])
-    #     # cv2.imwrite("output/contrast/anhe"+str(i)+".png",cv2.cvtColor(out, cv2.COLOR_RGB2BGR))
+    #     cv2.imwrite("output/contrast/anhe"+str(i)+".png",cv2.cvtColor(out, cv2.COLOR_RGB2BGR))
     #     cv2.imwrite("output/contrast/cs"+str(i)+".png",cv2.cvtColor(out2, cv2.COLOR_RGB2BGR))
-    #     # print(class_names[predict_image(out)[0]])
+    #     print(class_names[predict_image(out)[0]])
+    #     print(class_names[predict_image(out2)[0]])
+
+    # cur = range(96,113)
+    # for i in cur:
+    #     print(i)
+    #     img = Image.open("data/contrast/con"+str(i)+".jpg")
+    #     img = np.array(img.convert('RGB'))
+    #     img = cv2.resize(img, (299, 299))
+    #     out = anhe(img)
+    #     out = cv2.medianBlur(out,5)
+    #     out2 = contrast_adjust(img, delta=deltas[i-1])
+    #     cv2.imwrite("output/contrast/anhe"+str(i)+".png",cv2.cvtColor(out, cv2.COLOR_RGB2BGR))
+    #     cv2.imwrite("output/contrast/cs"+str(i)+".png",cv2.cvtColor(out2, cv2.COLOR_RGB2BGR))
+    #     print(class_names[predict_image(out)[0]])
     #     print(class_names[predict_image(out2)[0]])
 
     raw_correct = 0
     anhe_correct = 0
     cs_correct = 0
     for i in range(len(labels)):
-        # print(class_names[labels[i]])
         img = cv2.imread("output/contrast/cs"+str(i+1)+".png")
         img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         img = cv2.resize(img, (299, 299))
         if labels[i] == predict_image(img)[0]:
             cs_correct += 1
-            # print(i+1)
 
-        raw = Image.open("data/contrast/con"+str(i+1)+".HEIC")
+        if i > 94:
+            raw = Image.open("data/contrast/con"+str(i+1)+".jpg")
+        else:
+            raw = Image.open("data/contrast/con"+str(i+1)+".HEIC")
         raw = np.array(raw.convert('RGB'))
         raw = cv2.resize(raw, (299, 299))
         if labels[i] == predict_image(raw)[0]:
             raw_correct += 1
-            if predict_image(img)[0] != labels[i]:
-                print(i+1)
+            
 
         img = cv2.imread("output/contrast/anhe"+str(i+1)+".png")
         img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
