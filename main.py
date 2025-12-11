@@ -9,6 +9,7 @@ import torchvision.models as models
 from torchvision.models import Inception_V3_Weights
 from torchvision import transforms
 from bright_adjust import *
+from deblur_test import *
 
 
 def predict_image(image_array):
@@ -59,6 +60,32 @@ else:
     model.load_state_dict(checkpoint)
 
 register_heif_opener()
-img = Image.open("data/contrast/con1.HEIC")
+img = Image.open("data/combined2.jpg")
 img = np.array(img.convert('RGB'))
 img = cv2.resize(img, (299, 299))
+
+psf_size = 9
+angle = 0 
+psf = get_motion_kernel(psf_size, angle)
+
+psf = psf @ psf.T 
+psf = psf.astype(np.float32)
+
+rl_img = apply_richardson_lucy(img, psf, steps=10)
+
+cs_img = contrast_adjust(rl_img, delta= 10)
+
+median_img = cv2.medianBlur(cs_img,5)
+
+fig, axes = plt.subplots(1, 4)
+axes[0].imshow(img)
+axes[0].set_title("Raw\n" + class_names[predict_image(img)[0]])
+axes[1].imshow(rl_img)
+axes[1].set_title("After Deblur\n"+ class_names[predict_image(rl_img)[0]])
+axes[2].imshow(cs_img)
+axes[2].set_title("After Bright Adjust\n" + class_names[predict_image(cs_img)[0]])
+axes[3].imshow(median_img)
+axes[3].set_title("After Noise Removal\n" + class_names[predict_image(median_img)[0]])
+
+plt.show()
+
