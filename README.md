@@ -3,7 +3,7 @@
 ### Requriements
 numpy, matplotlib, cv2, pytorch, torchvision, skimages
 
-### Running combined noise removal
+### Running combined distortion removal
 Change line 63 with the path to the image you want to run deblur, brightness adjust, and occlusion removal on.
 run `python main.py`
 
