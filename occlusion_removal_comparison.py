@@ -63,41 +63,43 @@ if __name__ == "__main__":
             if line:  # Skip empty lines
                 labels.append(int(line))
 
-    raw_correct = 10
+    raw_correct = 0
     bilateral_correct = 0
-    dncnn_correct = 12
+    dncnn_correct = 0
     median_correct = 0
     resized_directory = 'data/occlusion/resized_original/'
     bilateral_directory = 'data/occlusion/bilateral_filtered/'
     dncnn_directory = 'data/occlusion/dncnn/'
     median_directory = 'data/occlusion/median/'
-    
+    correct = [False]*len(labels)
     for i in range(len(labels)):
-        # img = cv2.imread(resized_directory + "occlusion"+str(i)+".png")
-        # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        # img = cv2.resize(img, (299, 299))
-        # if labels[i] == predict_image(img)[0]:
-        #     raw_correct += 1
-       #else:
-            #print(f"Thought img {i} was {predict_image(img)[0]}, but it was actually {labels[i]}")
-        
-        img = cv2.imread(bilateral_directory + "occlusion"+str(i)+"_bilateral.png")
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        correct = [False]*len(labels)
+        img = cv2.imread(resized_directory + "occlusion"+str(i)+".png")
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         img = cv2.resize(img, (299, 299))
         if labels[i] == predict_image(img)[0]:
+            correct[0] = True
+            raw_correct += 1
+       
+        img = cv2.imread(bilateral_directory + "occlusion"+str(i)+"_bilateral.png")
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        img = cv2.resize(img, (299, 299))
+        if labels[i] == predict_image(img)[0]:
+            correct[1] = True
             bilateral_correct += 1
         
         img = cv2.imread(median_directory + "occlusion"+str(i)+"_median.png")
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         img = cv2.resize(img, (299, 299))
         if labels[i] == predict_image(img)[0]:
+            correct[2] = True
             median_correct += 1
 
-        # img = cv2.imread(dncnn_directory + "occlusion"+str(i)+"_dncnn.png")
-        # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        # img = cv2.resize(img, (299, 299))
-        # if labels[i] == predict_image(img)[0]:
-        #     dncnn_correct += 1
-        
-        
-    print(raw_correct, bilateral_correct, median_correct, dncnn_correct)
+        img = cv2.imread(dncnn_directory + "occlusion"+str(i)+"_dncnn.png")
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        img = cv2.resize(img, (299, 299))
+        if labels[i] == predict_image(img)[0]:
+            correct[3] = True
+            dncnn_correct += 1
+            
+    print(f"Images Correct without processing: {raw_correct} \nImages Correct after Bilateral Filtering: {bilateral_correct} \nImages Correct after Median Filtering: {median_correct} \nImages Correct after DnCNN: {dncnn_correct}")

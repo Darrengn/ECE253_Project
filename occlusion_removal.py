@@ -71,8 +71,8 @@ if __name__ == '__main__':
         os.makedirs(dncnn_directory)
     if not os.path.exists(median_directory):
         os.makedirs(median_directory)
-    do_dncnn = False
-    do_median = False
+    do_dncnn = True
+    do_median = True
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     dncnn = DnCNN()
     dncnn.to(device)
@@ -85,13 +85,13 @@ if __name__ == '__main__':
         img = cv2.imread(img_path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-        bilateral_img = cv2.bilateralFilter(img, d=7, sigmaColor=75, sigmaSpace=75)    #11 with 19, 75, 50-60
+        bilateral_img = cv2.bilateralFilter(img, d=9, sigmaColor=75, sigmaSpace=60)    #19 with 9, 75, 60
         bilateral_path = os.path.join(bilateral_directory, filename.split('.')[0] + '_bilateral.png')
         cv2.imwrite(bilateral_path, cv2.cvtColor(bilateral_img, cv2.COLOR_RGB2BGR))
 
 
         if do_median:
-            median_img = cv2.medianBlur(img, 5) #12 with 5, 5 with 7, 7 with 3
+            median_img = cv2.medianBlur(img, 5) #5 best
             median_path = os.path.join(median_directory, filename.split('.')[0] + '_median.png')
             cv2.imwrite(median_path, cv2.cvtColor(median_img, cv2.COLOR_RGB2BGR))
         if do_dncnn:
